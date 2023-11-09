@@ -9,30 +9,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.isurtionlsa.calculator.res.theme.MainAppCalcTheme
+import com.isurtionlsa.calculator.screens.HistoryScreen
 import com.isurtionlsa.calculator.screens.MainCalculatorScreen
 import com.isurtionlsa.calculator.vm.CoreViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
             MainAppCalcTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                val navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "main"
                 ) {
-                    val viewModel = viewModel<CoreViewModel>()
-                    val state = viewModel.currentState
+                    composable("main") {
+                        MainCalculatorScreen {
+                            navController.navigate("history")
+                        }
+                    }
 
-                    MainCalculatorScreen(
-                        calculatorState = state,
-                        modifier = Modifier.fillMaxSize().padding(8.dp),
-                        onAction = { viewModel.handleUserAction(it) }
-                    )
+                    composable(
+                        route = "history"
+                    ) {
+                        HistoryScreen {
+                            navController.popBackStack()
+                        }
+                    }
                 }
             }
         }

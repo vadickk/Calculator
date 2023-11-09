@@ -4,12 +4,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.isurtionlsa.calculator.data.CalculatorState
 import com.isurtionlsa.calculator.data.MathOperation
+import com.isurtionlsa.calculator.data.database.RequestHistoryItem
+import com.isurtionlsa.calculator.data.repository.RequestHistoryRepository
 import com.isurtionlsa.calculator.events.CalculatorEvent
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CoreViewModel : ViewModel() {
+@HiltViewModel
+class CoreViewModel @Inject constructor(
+    private val requestHistoryRepository: RequestHistoryRepository
+) : ViewModel() {
     var currentState by mutableStateOf(CalculatorState())
+    val requests = requestHistoryRepository.getRequestHistoryItems()
+
+    fun addNewRequestHistory(requestHistoryItem: RequestHistoryItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            requestHistoryRepository.addRequestHistoryItem(requestHistoryItem)
+        }
+    }
+
+    fun deleteAllHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            requestHistoryRepository.deleteAllHistory()
+        }
+    }
 
     private fun deleteLastCharacter() {
         when {
@@ -46,7 +69,7 @@ class CoreViewModel : ViewModel() {
         currentState = currentState.copy(number_second = currentState.number_second + number)
     }
 
-    private fun calculateResult() {
+    fun calculateResult() {
         val num1 = currentState.number_first.toDoubleOrNull()
         val num2 = currentState.number_second.toDoubleOrNull()
 
@@ -64,6 +87,19 @@ class CoreViewModel : ViewModel() {
                 result_operation = null
             )
         }
+    }
+
+    fun calculateResult(num1: Double?, num2: Double?, operation: MathOperation?): String {
+        return if (num1 != null && num2 != null) {
+            val result = when (operation) {
+                is MathOperation.Add -> num1 + num2
+                is MathOperation.Subtract -> num1 - num2
+                is MathOperation.Divide -> num1 / num2
+                is MathOperation.Multiply -> num1 * num2
+                else -> "0.0"
+            }
+            result.toString().take(15)
+        } else "0.0"
     }
 
     fun handleUserAction(action: CalculatorEvent) {

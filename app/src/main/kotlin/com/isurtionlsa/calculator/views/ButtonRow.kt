@@ -35,7 +35,41 @@ fun ButtonRow(buttons: List<String>, onAction: (CalculatorEvent) -> Unit) {
             RootCalculatorButton(
                 buttonText = symbol,
                 modifier = buttonModifier,
-                onClick = { onAction(getButtonEvent(symbol)) }
+                onClick = {
+                    onAction(getButtonEvent(symbol))
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ButtonRowForEquals(buttons: List<String>, onAction: (CalculatorEvent) -> Unit, onEquals: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        buttons.forEach { symbol ->
+            val buttonModifier = when (symbol) {
+                stringResource(R.string.button_0) -> Modifier
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .aspectRatio(2f)
+                    .weight(2f)
+                else -> Modifier
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .aspectRatio(1f)
+                    .weight(1f)
+            }
+
+            RootCalculatorButton(
+                buttonText = symbol,
+                modifier = buttonModifier,
+                onClick = {
+                    onAction(getButtonEvent(symbol))
+                    if (symbol == "=") {
+                        onEquals.invoke()
+                    }
+                }
             )
         }
     }
